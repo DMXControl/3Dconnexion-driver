@@ -13,11 +13,29 @@ namespace _3DconnexionDriver
         IntPtr _deviceHandle = IntPtr.Zero;
         int _leds = -1;
 
+        /// <summary>
+        /// Event when Device is at 0 Point
+        /// </summary>
         public event EventHandler ZeroPoint;
+        
+        /// <summary>
+        /// Event when Device is moved
+        /// </summary>
         public event EventHandler<MotionEventArgs> Motion;
-        public event EventHandler<DeviceChangeEventArgs> DeviceChange;
+        
+        /// <summary>
+        /// Event when Device changes. Doesn't work yet
+        /// </summary>
+        //public event EventHandler<DeviceChangeEventArgs> DeviceChange;
 
+        /// <summary>
+        /// Dispatching Thread
+        /// </summary>
         private readonly System.Threading.Thread eventThread;
+        
+        /// <summary>
+        /// Buffer for Events
+        /// </summary>
         private readonly Dictionary<SiApp.SiEventType, EventArgs> eventBuffer = new Dictionary<SiApp.SiEventType, EventArgs>();
 
         public _3DconnexionDevice(string appName)
@@ -25,6 +43,7 @@ namespace _3DconnexionDriver
             this.AppName = appName;
             eventThread = new System.Threading.Thread(EventThreadLoop);
             eventThread.IsBackground = true;
+            eventThread.Name = "3Dconnexion-Event-Dispatcher";
             eventThread.Start();
         }
 
@@ -33,41 +52,62 @@ namespace _3DconnexionDriver
             Dispose();
         }
 
+        /// <summary>
+        /// Device is available (initialized)
+        /// </summary>
         public bool IsAvailable
         {
             get { return _deviceHandle != IntPtr.Zero; }
         }
 
+        /// <summary>
+        /// Device is disposed
+        /// </summary>
         public bool IsDisposed
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// The name of the app using this device
+        /// </summary>
         public string AppName
         {
             get; 
             private set;
         }
 
+        /// <summary>
+        /// The Name of the Device (e.g. Space Pilot)
+        /// </summary>
         public string DeviceName
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// The DeviceID of the device
+        /// </summary>
         public int DeviceID
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// The Firmware version of the device
+        /// </summary>
         public string FirmwareVersion
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Bitwise Flags for the LEDs of the Device
+        /// </summary>
         public int LEDs
         {
             get { return _leds; }
@@ -81,6 +121,9 @@ namespace _3DconnexionDriver
             }
         }
 
+        /// <summary>
+        /// Path to an icon for that device, provided by the 3Dx Ware Driver
+        /// </summary>
         public string IconPath
         {
             get
@@ -95,6 +138,10 @@ namespace _3DconnexionDriver
             }
         }
 
+        /// <summary>
+        /// Initialize the Device
+        /// </summary>
+        /// <param name="windowHandle">Handle to window using the device</param>
         public void InitDevice(IntPtr windowHandle)
         {
             if (this.IsDisposed)
@@ -129,6 +176,9 @@ namespace _3DconnexionDriver
             this.FirmwareVersion = info.firmware;
         }
 
+        /// <summary>
+        /// Close the Device
+        /// </summary>
         public void CloseDevice()
         {
             if (_deviceHandle != IntPtr.Zero)
@@ -138,6 +188,12 @@ namespace _3DconnexionDriver
             }
         }
 
+        /// <summary>
+        /// Called in WndPrc to process the Window Messages
+        /// </summary>
+        /// <param name="msg">Message Number</param>
+        /// <param name="wParam"></param>
+        /// <param name="lParam"></param>
         public void ProcessWindowMessage(int msg, IntPtr wParam, IntPtr lParam)
         {
             if (this.IsDisposed) //We don't throw an Exception in the Message Loop, just return
@@ -181,11 +237,11 @@ namespace _3DconnexionDriver
                 Motion(this, args);
         }
 
-        protected virtual void OnDeviceChange(DeviceChangeEventArgs args)
-        {
-            if (DeviceChange != null)
-                DeviceChange(this, args);
-        }
+        //protected virtual void OnDeviceChange(DeviceChangeEventArgs args)
+        //{
+        //    if (DeviceChange != null)
+        //        DeviceChange(this, args);
+        //}
 
         #region IDisposable Member
 
