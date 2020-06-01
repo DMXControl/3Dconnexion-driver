@@ -1,0 +1,70 @@
+pipeline {
+	options {
+		buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '10'))
+		disableConcurrentBuilds()
+		disableResume()
+		copyArtifactPermission('/Lumos Installer (Pipeline)/*');
+	}
+	agent {
+		node{
+			label 'Win10'
+		}
+	}	
+	environment {
+		//  Define the VisualStudio tools
+		MSBuild = tool 'MSBuild VS 2019'
+		VSTestConsole = tool 'VSTest VS 2019'
+		
+		//  Define the additional tools
+		CLOC = tool 'CLOC_current'
+		OpenCover = tool 'OpenCover_current'
+		ReportGenerator = tool 'ReportGenerator_current'
+	}
+	triggers {
+		//  Trigger for gitea pushes with the branch as token
+		cron('H/30 * * * *')
+	}
+	stages{
+		stage('Count Lines of Code'){
+			steps {
+				//  Run the tool to count the code lines
+				bat "\"${CLOC}\" --by-file --xml --out=CountLinesOfCode/CLOCReport.xml --exclude-dir=Dependencies --include-lang=C# ."
+			}
+		}
+		stage('Build Debug Configuration'){
+			steps {
+				//  First update all nuget packages in the branch
+				bat 'nuget restore 3DconnexionDriver.sln'
+				
+				//  Then add the current build number in the version number and build the branch
+				changeAsmVer versionPattern: '$BUILD_NUMBER', regexPattern: '(Assembly(.*)Version\\("(.+)\\.(.+)\\.(.+)\\.(.+)")', replacementPattern: 'Assembly\$2Version("\$3.\$4.\$5.%s"'
+				bat "\"${MSBuild}\" 3DconnexionDriver.sln /p:Configuration=Debug /t:Clean;Rebuild /p:Platform=\"Any CPU\" "
+			}
+		}
+		stage('Build Release Configuration'){
+			steps {
+				script {
+					//  Build the release configuration of the project
+					bat "\"${MSBuild}\" 3DconnexionDriver.sln /p:Configuration=Release /t:Clean;Rebuild /p:Platform=\"Any CPU\" "
+				}
+			}
+		}
+		stage('Archive Artifacts'){
+			steps {
+				archiveArtifacts artifacts: 'bin/Release/3DconnexionDriver.dll'
+			}			
+		}
+	}
+	post {
+		always {
+		    // Publish the log of the build process
+			sloccountPublish encoding: 'UTF-8', pattern: 'CountLinesOfCode/CLOCReport.xml'
+			
+			recordIssues tool: msBuild()
+		}
+		success {
+			//  Run the post build processes only, if the build was a success because the the following step needs the output of the jobs so far
+			recordIssues tool: taskScanner(highTags:'FIXME', normalTags:'TODO', includePattern: '**/*.cs', IgnoreCase: true)
+		}
+	}
+}
