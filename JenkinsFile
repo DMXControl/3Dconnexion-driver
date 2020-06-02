@@ -3,7 +3,7 @@ pipeline {
 		buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '10'))
 		disableConcurrentBuilds()
 		disableResume()
-		copyArtifactPermission('/Lumos Installer (Pipeline)/*');
+		copyArtifactPermission('/Lumos Installer (Pipeline)/*,/3Dconnexion Lumos Plugin (Pipeline)/*');
 	}
 	agent {
 		node{
