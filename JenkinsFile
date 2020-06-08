@@ -22,7 +22,7 @@ pipeline {
 	}
 	triggers {
 		//  Trigger once a week
-		cron(@weekly)
+		cron('* * * * H')
 	}
 	stages{
 		stage('Count Lines of Code'){
