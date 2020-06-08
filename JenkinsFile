@@ -21,8 +21,8 @@ pipeline {
 		ReportGenerator = tool 'ReportGenerator_current'
 	}
 	triggers {
-		//  Trigger for gitea pushes with the branch as token
-		cron('H/30 * * * *')
+		//  Trigger once a week
+		cron('@weekly')
 	}
 	stages{
 		stage('Count Lines of Code'){
