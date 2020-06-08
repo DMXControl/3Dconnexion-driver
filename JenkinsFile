@@ -21,11 +21,8 @@ pipeline {
 		ReportGenerator = tool 'ReportGenerator_current'
 	}
 	triggers {
-		//  Trigger, when Lumos build was successful
-		upstream ( 
-		   threshold: hudson.model.Result.SUCCESS, 
-		   upstreamProjects: "/Lumos (Pipeline)/" + env.BRANCH_NAME.replaceAll("/", "%2F") 
-		)
+		//  Trigger once a week
+		cron(@weekly)
 	}
 	stages{
 		stage('Count Lines of Code'){
