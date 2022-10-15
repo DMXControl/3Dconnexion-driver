@@ -260,24 +260,32 @@ namespace _3DconnexionDriver
 
         private void EventThreadLoop()
         {
+            var snapshot = new List<KeyValuePair<SiApp.SiEventType, EventArgs>>();
+
             while (!this.IsDisposed)
             {
                 lock (eventBuffer)
                 {
                     while (eventBuffer.Count == 0)
                         Monitor.Wait(eventBuffer);
-                    foreach (var c in eventBuffer)
-                    {
-                        switch (c.Key)
-                        {
-                            case SiApp.SiEventType.SI_MOTION_EVENT:
-                                OnMotion(c.Value as MotionEventArgs); break;
-                            case SiApp.SiEventType.SI_ZERO_EVENT:
-                                OnZeroPoint(); break;
-                        }
-                    }
+
+                    snapshot.AddRange(eventBuffer);
                     eventBuffer.Clear();
                 }
+
+                foreach (var c in snapshot)
+                {
+                    switch (c.Key)
+                    {
+                        case SiApp.SiEventType.SI_MOTION_EVENT:
+                            OnMotion(c.Value as MotionEventArgs); break;
+                        case SiApp.SiEventType.SI_ZERO_EVENT:
+                            OnZeroPoint(); break;
+                    }
+                }
+
+                snapshot.Clear();
+
                 Thread.Sleep(50);
             }
         }
