@@ -33,10 +33,9 @@ namespace _3DconnexionDriver
         /// </summary>
         private readonly System.Threading.Thread eventThread;
         
-        /// <summary>
-        /// Buffer for Events
-        /// </summary>
-        private readonly Dictionary<SiApp.SiEventType, EventArgs> eventBuffer = new Dictionary<SiApp.SiEventType, EventArgs>();
+        private readonly object _locker = new object();
+        private bool _triggerZeroPoint;
+        private MotionEventArgs _triggerMotionEvent;
 
         public _3DconnexionDevice(string appName)
         {
@@ -208,17 +207,17 @@ namespace _3DconnexionDriver
                 switch (edata.type)
                 {
                     case SiApp.SiEventType.SI_ZERO_EVENT:
-                        lock (eventBuffer)
+                        lock (_locker)
                         {
-                            eventBuffer[SiApp.SiEventType.SI_ZERO_EVENT] = EventArgs.Empty;
-                            Monitor.Pulse(eventBuffer);
+                            _triggerZeroPoint = true;
+                            Monitor.Pulse(_locker);
                         }
                         break;
                     case SiApp.SiEventType.SI_MOTION_EVENT:
-                        lock (eventBuffer)
+                        lock (_locker)
                         {
-                            eventBuffer[SiApp.SiEventType.SI_MOTION_EVENT] = MotionEventArgs.FromEventArray(edata.spwData.mData);
-                            Monitor.Pulse(eventBuffer);
+                            _triggerMotionEvent = MotionEventArgs.FromEventArray(edata.spwData.mData);
+                            Monitor.Pulse(_locker);
                         }
                         break;
                 }
@@ -260,31 +259,27 @@ namespace _3DconnexionDriver
 
         private void EventThreadLoop()
         {
-            var snapshot = new List<KeyValuePair<SiApp.SiEventType, EventArgs>>();
-
             while (!this.IsDisposed)
             {
-                lock (eventBuffer)
-                {
-                    while (eventBuffer.Count == 0)
-                        Monitor.Wait(eventBuffer);
+                MotionEventArgs triggerMotionLocal;
+                bool triggerZeroLocal;
 
-                    snapshot.AddRange(eventBuffer);
-                    eventBuffer.Clear();
+                lock (_locker)
+                {
+                    while (!_triggerZeroPoint && _triggerMotionEvent == null)
+                        Monitor.Wait(_locker);
+
+                    triggerMotionLocal = _triggerMotionEvent;
+                    triggerZeroLocal = _triggerZeroPoint;
+
+                    _triggerMotionEvent = null;
+                    _triggerZeroPoint = false;
                 }
 
-                foreach (var c in snapshot)
-                {
-                    switch (c.Key)
-                    {
-                        case SiApp.SiEventType.SI_MOTION_EVENT:
-                            OnMotion(c.Value as MotionEventArgs); break;
-                        case SiApp.SiEventType.SI_ZERO_EVENT:
-                            OnZeroPoint(); break;
-                    }
-                }
-
-                snapshot.Clear();
+                if (triggerMotionLocal != null)
+                    OnMotion(triggerMotionLocal);
+                if (triggerZeroLocal)
+                    OnZeroPoint();
 
                 Thread.Sleep(50);
             }
