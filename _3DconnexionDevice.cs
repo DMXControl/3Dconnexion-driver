@@ -28,11 +28,6 @@ namespace _3DconnexionDriver
         /// </summary>
         //public event EventHandler<DeviceChangeEventArgs> DeviceChange;
 
-        /// <summary>
-        /// Dispatching Thread
-        /// </summary>
-        private readonly System.Threading.Thread eventThread;
-        
         private readonly object _locker = new object();
         private bool _triggerZeroPoint;
         private MotionEventArgs _triggerMotionEvent;
@@ -40,7 +35,7 @@ namespace _3DconnexionDriver
         public _3DconnexionDevice(string appName)
         {
             this.AppName = appName;
-            eventThread = new System.Threading.Thread(EventThreadLoop);
+            var eventThread = new System.Threading.Thread(EventThreadLoop);
             eventThread.IsBackground = true;
             eventThread.Name = "3Dconnexion-Event-Dispatcher";
             eventThread.Start();
@@ -246,13 +241,16 @@ namespace _3DconnexionDriver
 
         public void Dispose()
         {
-            if (!this.IsDisposed)
-            {
-                CloseDevice();
-                ZeroPoint = null;
-                Motion = null;
-            }
+            if (IsDisposed) return;
+
             this.IsDisposed = true;
+
+            CloseDevice();
+            ZeroPoint = null;
+            Motion = null;
+
+            lock (_locker)
+                Monitor.Pulse(_locker);
         }
 
         #endregion
@@ -267,7 +265,11 @@ namespace _3DconnexionDriver
                 lock (_locker)
                 {
                     while (!_triggerZeroPoint && _triggerMotionEvent == null)
+                    {
+                        if (IsDisposed) return;
+
                         Monitor.Wait(_locker);
+                    }
 
                     triggerMotionLocal = _triggerMotionEvent;
                     triggerZeroLocal = _triggerZeroPoint;
