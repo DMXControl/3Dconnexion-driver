@@ -49,25 +49,29 @@ pipeline {
 				}
 			}
 		}
-		stage('Archive Artifacts'){
-			steps {
-				archiveArtifacts artifacts: 'bin/Release/3DconnexionDriver.dll'
-			}			
-		}
 		stage('Pack and Publish Package on Public NuGet'){
             when { allOf {buildingTag() ; tag pattern: "[1-9][0-9]*\\.[0-9]+\\.[0-9]+", comparator: "REGEXP"} }
             steps {
                 script {
+					PROGRAM_VERSION_TOKENIZED = powershell(returnStdout: true, script: "(Get-Item \"DMXLIB/bin/Release/netstandard2.0/3DconnexionDriver.dll\").VersionInfo.FileVersion").trim().tokenize(".")
+					PROGRAM_VERSION = PROGRAM_VERSION_TOKENIZED[0] + '.' + PROGRAM_VERSION_TOKENIZED[1] + '.' + PROGRAM_VERSION_TOKENIZED[2] + '.' + PROGRAM_VERSION_TOKENIZED[3]
+					
                     //  Run the NuGet Publisher Worker Job to pack and publish the artifacts (only, if this build is tagged)
                     build job:'_worker-NuGet-Publisher', parameters: [
                         string(name: 'WS_PATH', value: "${WORKSPACE}"),
                         string(name: 'PRJ_FILE', value: "3DconnexionDriver.csproj" ),
-                        string(name: 'VERSION', value: "${TAG_NAME}" ),
+                        string(name: 'VERSION', value: "${PROGRAM_VERSION}" ),
+						string(name: 'USE_DOTNET_PACK', value: "true" ),
                         booleanParam(name: 'USE_DMXC_NUGET', value: false),
                         [$class: 'NodeParameterValue', name: 'BUILD_NODE', labels: ["${env.NODE_NAME}"], nodeEligibility: [$class: 'AllNodeEligibility']]]
                 }
             }
         }
+		stage('Archive Artifacts'){
+			steps {
+				archiveArtifacts artifacts: 'bin/Release/**/*.*'
+			}			
+		}
 	}
 	post {
 		always {

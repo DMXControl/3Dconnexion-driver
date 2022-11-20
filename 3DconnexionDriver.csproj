@@ -1,8 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-  </PropertyGroup>
-
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<OutputType>Library</OutputType>
+		<AssemblyName>3DconnexionDriver</AssemblyName>
+		<ApplicationRevision>0</ApplicationRevision>
+		<ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+		<PackageId>DMXControlProjects.3DconnexionDriver</PackageId>
+		<Authors>DMXControl Projects e.V.</Authors>
+		<Description>3Dconnexion Driver to control the 3D mice of 3Dconnexion</Description>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<Content Include="Licence.txt" copyToOutput="true">
+			<IncludeInPackage>true</IncludeInPackage>
+			<CopyToOutput>true</CopyToOutput>
+			<BuildAction>Content</BuildAction>
+			<copyToOutput>true</copyToOutput>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="LicenseAgreement3DxSDK.txt" copyToOutput="true">
+			<IncludeInPackage>true</IncludeInPackage>
+			<CopyToOutput>true</CopyToOutput>
+			<BuildAction>Content</BuildAction>
+			<copyToOutput>true</copyToOutput>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="README.md" copyToOutput="true">
+			<IncludeInPackage>true</IncludeInPackage>
+			<CopyToOutput>true</CopyToOutput>
+			<BuildAction>Content</BuildAction>
+			<copyToOutput>true</copyToOutput>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 </Project>
