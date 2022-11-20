@@ -54,6 +54,20 @@ pipeline {
 				archiveArtifacts artifacts: 'bin/Release/3DconnexionDriver.dll'
 			}			
 		}
+		stage('Pack and Publish Package on Public NuGet'){
+            when { allOf {buildingTag() ; tag pattern: "[1-9][0-9]*\\.[0-9]+\\.[0-9]+", comparator: "REGEXP"} }
+            steps {
+                script {
+                    //  Run the NuGet Publisher Worker Job to pack and publish the artifacts (only, if this build is tagged)
+                    build job:'_worker-NuGet-Publisher', parameters: [
+                        string(name: 'WS_PATH', value: "${WORKSPACE}"),
+                        string(name: 'PRJ_FILE', value: "3DconnexionDriver.csproj" ),
+                        string(name: 'VERSION', value: "${TAG_NAME}" ),
+                        booleanParam(name: 'USE_DMXC_NUGET', value: false),
+                        [$class: 'NodeParameterValue', name: 'BUILD_NODE', labels: ["${env.NODE_NAME}"], nodeEligibility: [$class: 'AllNodeEligibility']]]
+                }
+            }
+        }
 	}
 	post {
 		always {
