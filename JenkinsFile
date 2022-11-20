@@ -52,7 +52,7 @@ pipeline {
 		stage('Pack and Publish Package on Public NuGet'){
             steps {
                 script {
-					PROGRAM_VERSION_TOKENIZED = powershell(returnStdout: true, script: "(Get-Item \"3Dconnexion-driver/bin/Release/netstandard2.0/3DconnexionDriver.dll\").VersionInfo.FileVersion").trim().tokenize(".")
+					PROGRAM_VERSION_TOKENIZED = powershell(returnStdout: true, script: "(Get-Item \"bin/Release/netstandard2.0/3DconnexionDriver.dll\").VersionInfo.FileVersion").trim().tokenize(".")
 					PROGRAM_VERSION = PROGRAM_VERSION_TOKENIZED[0] + '.' + PROGRAM_VERSION_TOKENIZED[1] + '.' + PROGRAM_VERSION_TOKENIZED[2] + '.' + PROGRAM_VERSION_TOKENIZED[3]
 					
                     //  Run the NuGet Publisher Worker Job to pack and publish the artifacts (only, if this build is tagged)
