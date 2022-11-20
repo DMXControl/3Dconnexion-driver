@@ -50,10 +50,6 @@ pipeline {
 			}
 		}
 		stage('Pack and Publish Package on Public NuGet'){
-            when { allOf {
-				not {buildingTag() }
-				branch 'master'
-			} }
             steps {
                 script {
 					PROGRAM_VERSION_TOKENIZED = powershell(returnStdout: true, script: "(Get-Item \"DMXLIB/bin/Release/netstandard2.0/3DconnexionDriver.dll\").VersionInfo.FileVersion").trim().tokenize(".")
