@@ -12,8 +12,8 @@ pipeline {
 	}	
 	environment {
 		//  Define the VisualStudio tools
-		MSBuild = tool 'MSBuild VS 2019'
-		VSTestConsole = tool 'VSTest VS 2019'
+		MSBuild = tool 'MSBuild VS 2022'
+		VSTestConsole = tool 'VSTest VS 2022'
 		
 		//  Define the additional tools
 		CLOC = tool 'CLOC_current'
