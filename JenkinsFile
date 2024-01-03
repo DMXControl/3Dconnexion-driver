@@ -60,7 +60,7 @@ pipeline {
                         string(name: 'WS_PATH', value: "${WORKSPACE}"),
                         string(name: 'PRJ_FILE', value: "3DconnexionDriver.csproj" ),
                         string(name: 'VERSION', value: "${PROGRAM_VERSION}" ),
-						string(name: 'USE_DOTNET_PACK', value: "true" ),
+						booleanParam(name: 'USE_DOTNET_PACK', value: true),
                         booleanParam(name: 'USE_DMXC_NUGET', value: false),
                         [$class: 'NodeParameterValue', name: 'BUILD_NODE', labels: ["${env.NODE_NAME}"], nodeEligibility: [$class: 'AllNodeEligibility']]]
                 }
