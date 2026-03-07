@@ -20,10 +20,6 @@ pipeline {
 		OpenCover = tool 'OpenCover_current'
 		ReportGenerator = tool 'ReportGenerator_current'
 	}
-	triggers {
-		//  Trigger once a week
-		cron('H H * * H')
-	}
 	stages{
 		stage('Count Lines of Code'){
 			steps {
